@@ -116,7 +116,7 @@ public class MainActivity extends Activity {
 
             // Write Hello World in blue text
             contentStream.beginText();
-            contentStream.setNonStrokingColor(15, 38, 192);
+            contentStream.setNonStrokingColor(15 / 255f, 38 / 255f, 192 / 255f);
             contentStream.setFont(font, 12);
             contentStream.newLineAtOffset(100, 700);
             contentStream.showText("Hello World");
@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
 
             // Draw a green rectangle
             contentStream.addRect(5, 500, 100, 100);
-            contentStream.setNonStrokingColor(0, 255, 125);
+            contentStream.setNonStrokingColor(0 / 255f, 255 / 255f, 125 / 255f);
             contentStream.fill();
 
             // Draw the falcon base image
@@ -308,7 +308,7 @@ public class MainActivity extends Activity {
 
             // Write Hello World in blue text
             contentStream.beginText();
-            contentStream.setNonStrokingColor(15, 38, 192);
+            contentStream.setNonStrokingColor(15 / 255f, 38 / 255f, 192 / 255f);
             contentStream.setFont(font, 12);
             contentStream.newLineAtOffset(100, 700);
             contentStream.showText("Hello World");
