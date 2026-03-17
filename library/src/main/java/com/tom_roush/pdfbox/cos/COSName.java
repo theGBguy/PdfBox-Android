@@ -20,7 +20,8 @@ import com.tom_roush.pdfbox.util.Hex;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.ref.Cleaner;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -34,9 +35,29 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class COSName extends COSBase implements Comparable<COSName>
 {
     // using ConcurrentHashMap because this can be accessed by multiple threads
-    private static final Map<String, WeakReference<COSName>> NAME_MAP = //
-            new ConcurrentHashMap<>(8192);
-    private static final Cleaner CLEANER = Cleaner.create();
+    private static final ReferenceQueue<COSName> NAME_QUEUE = new ReferenceQueue<>();
+    private static final Map<String, NameWeakReference> NAME_MAP = new ConcurrentHashMap<>(8192);
+
+    /** WeakReference that holds the map key so it can be removed on GC. */
+    private static final class NameWeakReference extends WeakReference<COSName>
+    {
+        final String key;
+        NameWeakReference(COSName name, ReferenceQueue<COSName> queue)
+        {
+            super(name, queue);
+            this.key = name.name;
+        }
+    }
+
+    /** Drain stale entries from the reference queue. */
+    private static void expungeStaleEntries()
+    {
+        Reference<? extends COSName> ref;
+        while ((ref = NAME_QUEUE.poll()) != null)
+        {
+            NAME_MAP.remove(((NameWeakReference) ref).key, ref);
+        }
+    }
 
     //
     // IMPORTANT: this list is *alphabetized* and does not need any JavaDoc
@@ -684,7 +705,7 @@ public final class COSName extends COSBase implements Comparable<COSName>
      */
     public static COSName getPDFName(String aName)
     {
-        WeakReference<COSName> weakRef = NAME_MAP.get(aName);
+        NameWeakReference weakRef = NAME_MAP.get(aName);
         COSName name = weakRef != null ? weakRef.get() : null;
 
         if (name == null)
@@ -694,13 +715,13 @@ public final class COSName extends COSBase implements Comparable<COSName>
             // Use double checked locking to make the code thread safe.
             synchronized (NAME_MAP)
             {
+                expungeStaleEntries();
                 weakRef = NAME_MAP.get(aName);
                 name = weakRef != null ? weakRef.get() : null;
                 if (name == null)
                 {
                     name = new COSName(aName);
-                    CLEANER.register(name, () -> NAME_MAP.remove(aName));
-                    NAME_MAP.put(aName, new WeakReference<>(name));
+                    NAME_MAP.put(aName, new NameWeakReference(name, NAME_QUEUE));
                 }
             }
         }
