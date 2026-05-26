@@ -407,7 +407,7 @@ public class TestSymmetricKeyEncryption
             srcImgTab.add(pdfRenderer.renderImage(i));
             try (InputStream unfilteredStream = document.getPage(i).getContents())
             {
-                srcContentStreamTab.add(unfilteredStream.readAllBytes());
+                srcContentStreamTab.add(IOUtils.readBytesCompat(unfilteredStream));
             }
         }
 
@@ -425,7 +425,7 @@ public class TestSymmetricKeyEncryption
                 // compare content streams
                 try (InputStream unfilteredStream = encryptedDoc.getPage(i).getContents())
                 {
-                    byte[] bytes = unfilteredStream.readAllBytes();
+                    byte[] bytes = IOUtils.readBytesCompat(unfilteredStream);
                     assertArrayEquals("content stream of page " + i + " not identical",
                             srcContentStreamTab.get(i),
                             bytes);
@@ -558,7 +558,10 @@ public class TestSymmetricKeyEncryption
 
     private byte[] getFileResourceAsByteArray(String testFileName) throws IOException
     {
-        return TestSymmetricKeyEncryption.class.getResourceAsStream(testFileName).readAllBytes();
+        try (InputStream is = TestSymmetricKeyEncryption.class.getResourceAsStream(testFileName))
+        {
+            return IOUtils.readBytesCompat(is);
+        }
     }
 
     private byte[] getFileAsByteArray(File f) throws IOException
