@@ -329,6 +329,35 @@ public class MainActivity extends Activity {
     }
 
     /**
+     * Loads the previously-created encrypted PDF and renders page 0.
+     * Exercises the AES decrypt path (prepareAESInitializationVector) to verify
+     * the API <33 readNBytes fix.
+     */
+    public void renderEncryptedPdf(View v)
+    {
+        File file = new File(root, "crypt.pdf");
+        if (!file.exists())
+        {
+            tv.setText("crypt.pdf not found — tap 'Create Encrypted PDF' first");
+            return;
+        }
+        try
+        {
+            PDDocument document = Loader.loadPDF(file, "hi");
+            PDFRenderer renderer = new PDFRenderer(document);
+            pageImage = renderer.renderImage(0, 1, ImageType.ARGB);
+            document.close();
+            tv.setText("Successfully decrypted & rendered " + file.getName());
+            displayRenderedImage();
+        }
+        catch (IOException e)
+        {
+            Log.e("PdfBox-Android-Sample", "Exception thrown while rendering encrypted PDF", e);
+            tv.setText("Failed to render encrypted PDF: " + e.getMessage());
+        }
+    }
+
+    /**
      * Helper method for drawing the result of renderFile() on screen
      */
     private void displayRenderedImage() {

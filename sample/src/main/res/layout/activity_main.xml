@@ -53,11 +53,20 @@
         android:layout_marginTop="10dp"
         android:onClick="createEncryptedPdf" />
 
+    <Button
+        android:id="@+id/buttonRenderEncrypted"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Render Encrypted PDF"
+        android:layout_below="@+id/buttonCreateEncrypted"
+        android:layout_marginTop="10dp"
+        android:onClick="renderEncryptedPdf" />
+
     <TextView
         android:id="@+id/statusTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonCreateEncrypted"
+        android:layout_below="@+id/buttonRenderEncrypted"
         android:text="@string/hello_world"
         android:background="#EEE"/>
 
