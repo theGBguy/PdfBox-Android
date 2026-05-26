@@ -409,8 +409,17 @@ public abstract class SecurityHandler<T_POLICY extends ProtectionPolicy>
     {
         if (decrypt)
         {
-            // read IV from stream
-            int ivSize = data.readNBytes(iv, 0, iv.length);
+            // read IV from stream (manual loop for Android API < 33 compatibility)
+            int ivSize = 0;
+            while (ivSize < iv.length)
+            {
+                int n = data.read(iv, ivSize, iv.length - ivSize);
+                if (n < 0)
+                {
+                    break;
+                }
+                ivSize += n;
+            }
             if (ivSize == 0)
             {
                 return false;
@@ -525,12 +534,23 @@ public abstract class SecurityHandler<T_POLICY extends ProtectionPolicy>
             try (InputStream is = stream.createRawInputStream())
             {
                 int nBytes = 10;
-                buf = is.readNBytes(nBytes);
-                int isResult = buf.length;
-
-                if (buf.length != nBytes)
+                buf = new byte[nBytes];
+                int total = 0;
+                while (total < nBytes)
                 {
-                    Log.d("PdfBox-Android", "Tried reading {" + buf.length +"} bytes but only {" + isResult +"} bytes read");
+                    int n = is.read(buf, total, nBytes - total);
+                    if (n < 0)
+                    {
+                        break;
+                    }
+                    total += n;
+                }
+                if (total != nBytes)
+                {
+                    byte[] trimmed = new byte[total];
+                    System.arraycopy(buf, 0, trimmed, 0, total);
+                    buf = trimmed;
+                    Log.d("PdfBox-Android", "Tried reading {" + nBytes +"} bytes but only {" + total +"} bytes read");
                 }
             }
             if (Arrays.equals(buf, "<?xpacket ".getBytes(StandardCharsets.ISO_8859_1)))
